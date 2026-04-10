@@ -66,12 +66,13 @@ const CreatePosts = () => {
 
   const createPost = async (e) => {
     e.preventDefault();
-    const postData = new FormData();
 
-    postData.set("title", title);
-    postData.set("category", category);
-    postData.set("description", description);
-    postData.set("thumbnail", thumbnail);
+    const postData = {
+      title,
+      category,
+      description,
+      thumbnail,
+    };
 
     try {
       const response = await axios.post(
@@ -81,6 +82,7 @@ const CreatePosts = () => {
           withCredentials: true,
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         },
       );
@@ -91,17 +93,21 @@ const CreatePosts = () => {
     } catch (err) {
       console.error(err); // Log the error for debugging
       if (err.response && err.response.data) {
-        if (
-          err.response.data.message ===
-          "TypeError: Cannot read properties of null (reading 'thumbnail')"
-        ) {
-          setError("Please choose a thumbnail");
-        } else {
-          setError(err.response.data.message);
-        }
+        setError(err.response.data.message || "An error occurred");
       } else {
         setError("An unexpected error occurred");
       }
+    }
+  };
+
+  const handleThumbnailChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnail(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -135,8 +141,8 @@ const CreatePosts = () => {
           />
           <input
             type="file"
-            onChange={(e) => setThumbnail(e.target.files[0])}
-            accept="png, jpg, jpeg"
+            onChange={handleThumbnailChange}
+            accept="image/png, image/jpg, image/jpeg"
           />
           <button type="submit" className="btn primary">
             Create

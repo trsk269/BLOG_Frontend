@@ -49,14 +49,16 @@ const UserProfile = () => {
   const changeAvatarHandler = async () => {
     setIsAvatarTouched(false);
     try {
-      const postData = new FormData();
-      postData.set("avatar", avatar);
+      const postData = { avatar };
       const response = await axios.post(
         `${process.env.REACT_APP_BASE_URL}/users/change-avatar`,
         postData,
         {
           withCredentials: true,
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
       );
       setAvatar(response?.data.avatar);
@@ -65,16 +67,28 @@ const UserProfile = () => {
     }
   };
 
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatar(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const updateUserDetails = async (e) => {
     e.preventDefault();
 
     try {
-      const userData = new FormData();
-      userData.set("name", name);
-      userData.set("email", email);
-      userData.set("currentPassword", currentPassword);
-      userData.set("newPassword", newPassword);
-      userData.set("confirmNewPassword", confirmNewPassword);
+      const userData = {
+        name,
+        email,
+        currentPassword,
+        newPassword,
+        confirmNewPassword,
+      };
 
       const response = await axios.patch(
         `${process.env.REACT_APP_BASE_URL}/users/edit-user`,
@@ -83,6 +97,7 @@ const UserProfile = () => {
           withCredentials: true,
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         },
       );
@@ -104,10 +119,7 @@ const UserProfile = () => {
         <div className="profile__details">
           <div className="avatar__wrapper">
             <div className="profile__avatar">
-              <img
-                src={`${process.env.REACT_APP_ASSETS_URL}/uploads/${avatar}`}
-                alt=""
-              />
+              <img src={avatar} alt="" />
             </div>
             {/* form to update avatar */}
             <form className="avatar__form">
@@ -115,8 +127,8 @@ const UserProfile = () => {
                 type="file"
                 name="avatar"
                 id="avatar"
-                onChange={(e) => setAvatar(e.target.files[0])}
-                accept="png ,jpg, jpeg"
+                onChange={handleAvatarChange}
+                accept="image/png ,image/jpg, image/jpeg"
               />
               <label
                 htmlFor="avatar"
